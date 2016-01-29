@@ -2,8 +2,8 @@ markdown: redcarpet
 highlighter: null
 permalink: /:title
 
-url: "http://rantianhua.github.io/"
-baseurl: ""
+url:
+baseurl:
 
 redcarpet:
   extensions: [strikethrough, tables]

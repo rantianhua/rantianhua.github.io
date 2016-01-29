@@ -1,2 +1,4 @@
-# rantianhua.github.io
-我的个人博客！
+# Tianhua Ran
+
+My name is Tianhua Ran.I am happy to share my stories and things I learned. Happy to communicate with you!
+
