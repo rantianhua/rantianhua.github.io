@@ -1,13 +1,20 @@
-markdown: redcarpet
-highlighter: null
-permalink: /:title
+title:            冉天华的博客
+description:      用文字记录我的成长！
+url:              # Site url, without a slash at the end.
+signoff:          # Your name.
+disqus_shortname: # disqus comment thread for post header options. ( leave blank if unwanted. )
+facebook_appid:   # appid for like button, remove from /_includes/share.html if unwanted.
+google_analytics: # set tracking, remove from /javascripts/basic.js if unwanted.
 
-url: "http://rantianhua.github.io/"
-baseurl: ""
-
+links:
+  - name:         About
+    url:          /about
+  - name:         GitHub
+    url:          http://github.com/rantianhua
+    external:     true
+highlighter:      pygments
+permalink:        pretty
+markdown:         redcarpet
 redcarpet:
-  extensions: [strikethrough, tables]
-
-sass:
-  sass_dir: public/css
-  style: :compressed
+  extensions:
+    - smart
