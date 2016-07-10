@@ -15,7 +15,7 @@ Download the theme @ http://github.com/pietromenna/jekyll-cayman-theme/archive/m
 Unzip it and use it as a regular jekyll folder.
 
 ```
-$ unzip master.zip
+$ unzip jekyll-cayman-theme-master.zip
 ```
 
 Use it!
