@@ -1,18 +1,20 @@
 # Setup
-title:        Project or Site name
-tagline:      A responsive theme for your project on GitHub Pages
+title:        冉天华的博客
+tagline:      用文字记录的成长！
 baseurl:      ""
-paginate:     1
-locale:       "en"
+paginate:     5
+locale:       "zh"
 
 # About/contact
 author:
-  name:       Author name
-  url:        http://yourhomepage.com 
+  name:       冉天华（Jerome）
+  url:        https://github.com/rantianhua
 
 # Gems
 gems:
   - jekyll-paginate
+
+plugins: [jekyll-paginate]
 
 #Others
 markdown: kramdown
