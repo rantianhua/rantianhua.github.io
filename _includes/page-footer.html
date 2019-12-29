@@ -1,2 +1,19 @@
 <footer class="site-footer">
+  <div class="pagination">
+    {% if paginator.previous_page %}
+      {% if paginator.previous_page == 1 %}
+        <a href="/index.html" class="previous">上一页</a>
+      {% else %}
+        <a href="/page{{ paginator.previous_page }}" class="previous">上一页</a>
+      {% endif %}
+    {% else %}
+      <span class="previous">上一页</span>
+    {% endif %}
+      <span class="page_number ">{{ paginator.page }} / {{ paginator.total_pages }}</span>
+    {% if paginator.next_page %}
+      <a href="/page{{ paginator.next_page }}" class="next">下一页</a>
+    {% else %}
+      <span class="next">下一页</span>
+    {% endif %}
+  </div>
 </footer>

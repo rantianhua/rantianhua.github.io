@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>冉天华的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+  <h1 class="project-name">冉天华的博客</h1>
+  <h2 class="project-tagline">用文字记录我的成长！</h2>
+</section>
+
+    <section class="main-content">
+      
+      <h2>Android 用 Wireshark 和 tcpdump 抓包</h2>
+<p class="meta">01 Feb 2016</p>
+
+<p>今天总结下两种抓取android手机网络数据包的方法，一种是直接用Wireshark，这种方式简单快捷，唯一的要求是需要电脑和手机连在同一个局域网下，共用同一个wifi热点；另一种是利用tcpdump抓取手机的数据包，然后通过Wireshark查看分析抓取到的数据，相比于第一种，使用起来要麻烦一些，而且需要root手机，但不要求手机和电脑处在同一个网络下。</p>
+
+<h3 id="利用-wireshark-抓包">利用 Wireshark 抓包</h3>
+
+<p>这个操作很简单，最直接的就是让电脑和手机连上同一个wifi，然后打开Wireshark，找到路由器的网卡，选择并开始抓包，此时手机访问网络的数据就能被Wireshark抓取到。</p>
+
+<h3 id="利用-tcpdump-抓包">利用 tcpdump 抓包</h3>
+
+<ul>
+  <li><strong>下载tcpdump</strong></li>
+</ul>
+
+<p>在Trinea的这篇<a href="http://www.trinea.cn/android/tcpdump_wireshark/">博客</a>中给了一个下载链接，不过经实践，这个tcpdump在一些手机上不能使用，原因第三步会说明，并给出可用的下载链接。</p>
+
+<ul>
+  <li><strong>将其复制到手机上</strong></li>
+</ul>
+
+<p>第一步下载下来的是一个二进制文件，需要把他复制到手机上在shell模式下运行，具体操作如下：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>adb root
+adb push 下载/tcpdump /data/local/
+adb shell chmod 6755 /data/local/tcpdump
+</code></pre></div></div>
+<p>关于adb的使用可以查看<a href="http://rantianhua.github.io/useadb/">这里</a>。</p>
+
+<ul>
+  <li><strong>运行tcpdump抓包</strong></li>
+</ul>
+
+<p>执行<code class="highlighter-rouge">adb shell /data/local/tcpdump -n -s 0</code>抓取的网络数据会在屏幕上滚动显示，通过Ctrl+C停止。但是我执行这条语句后返回错误：<strong>error: only position independent executables (PIE) are supported.</strong>。google得知是因为在Android L就开始PIE这个安全机制，即如果调用的可执行文件不是基于PIE方式编译的，则无法运行。所以需要下载通过PIE编译的tcpdump，对应的文件可以在<a href="https://github.com/zencodex/hack-android/raw/master/arm-bin/tcpdump-pie/tcpdump">这里</a>下载。通过上面的命令无法查看具体的数据包，所以可以将抓取的结果保存在文件里然后通过Wireshark分析，操作如下：</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>adb shell
+cd /data/local/
+tcpdump -i any -p -s 0 /sdcard/capture.pcap
+</code></pre></div></div>
+<p>通过Ctrl+C终止抓包。此时结果已经保存在手机sdcard的capture.pcap文件里。</p>
+
+<ul>
+  <li><strong>用Wireshark查看数据</strong></li>
+</ul>
+
+<p>通过命令<code class="highlighter-rouge">adb pull /sdcard/capture.pcap .</code>将文件复制到本地，然后用Wireshark打开分析即可，下图是我实际操作获取的结果：
+<img src="/images/tcpdumpcapture.png" alt="利用tcpdump抓取的数据" />  <br />
+可以看到tcp的三次握手过程和手机向微信发出的post请求。</p>
+
+
+
+      <footer class="site-footer">
+</footer>
+
+
+    </section>
+
+  </body>
+</html>

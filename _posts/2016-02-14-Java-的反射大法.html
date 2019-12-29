@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh">
+  
+  <head>
+  <meta charset="UTF-8">
+  <title>冉天华的博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#157878">
+  <link rel="stylesheet" href="/css/normalize.css">
+  <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+  <link rel="stylesheet" href="/css/cayman.css">
+</head>
+
+  <body>
+    <section class="page-header">
+  <h1 class="project-name">冉天华的博客</h1>
+  <h2 class="project-tagline">用文字记录我的成长！</h2>
+</section>
+
+    <section class="main-content">
+      
+      <h2>Java 的反射大法</h2>
+<p class="meta">15 Feb 2016</p>
+
+<h2 id="java反射简介">Java反射简介</h2>
+<hr />
+<blockquote>
+  <p>Java 反射是可以让我们在运行时获取类的函数、属性、父类、接口等 Class 内部信息的机制。通过反射还可以让我们在运行期实例化对象，调用方法，通过调用 get/set 方法获取／设置变量的值，即使方法或属性是私有的的也可以通过反射的形式调用，这种“看透 class”的能力被称为内省，这种能力在框架开发中尤为重要。 有些情况下，我们要使用的类在运行时才会确定，这个时候我们不能在编译期就使用它，因此只能通过反射的形式来使用在运行时才存在的类(该类符合某种特定的规范，例如 JDBC)，这是反射用得比较多的场景。还有一个比较常见的场景就是编译时我们对于类的内部信息不可知，必须得到运行时才能获取类的具体信息。比如 ORM 框架，在运行时才能够获取类中的各个属性，然后通过反射的形式获取其属性名和值，存入数据库。这也是反射比较经典应用场景之一。</p>
+</blockquote>
+
+<h2 id="实例学习">实例学习</h2>
+<hr />
+<p>为学习反射的使用，特意写了一个java工程来学习，为方便后面的说明，先把主要的类代码放出来，详细代码已经上传至<a href="https://github.com/rantianhua/JavaStudy">Github</a>上。</p>
+
+<h2 id="parentjava">Parent.java</h2>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">reflection</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">Parent</span> <span class="o">{</span>
+	<span class="c1">//姓名</span>
+	<span class="kd">public</span> <span class="nc">String</span> <span class="n">mName</span><span class="o">;</span>
+	<span class="c1">//性别</span>
+	<span class="kd">public</span> <span class="nc">String</span> <span class="n">mSex</span><span class="o">;</span>
+	
+	<span class="kd">public</span> <span class="nf">Parent</span> <span class="o">(</span><span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+		<span class="k">this</span><span class="o">(</span><span class="s">"男"</span><span class="o">,</span><span class="n">name</span><span class="o">);</span>
+	<span class="o">}</span>
+	
+	<span class="kd">public</span> <span class="nf">Parent</span> <span class="o">(</span><span class="nc">String</span> <span class="n">sex</span><span class="o">,</span><span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+		<span class="n">mSex</span> <span class="o">=</span> <span class="n">sex</span><span class="o">;</span>
+		<span class="n">mName</span> <span class="o">=</span> <span class="n">name</span><span class="o">;</span>
+	<span class="o">}</span>
+	
+	<span class="kd">abstract</span> <span class="kt">void</span> <span class="nf">greet</span><span class="o">();</span>
+
+	<span class="kd">abstract</span> <span class="kt">void</span> <span class="nf">introduce</span><span class="o">();</span>
+	
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">parentMethod</span><span class="o">()</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"this is a method in parent class"</span><span class="o">);</span>
+	<span class="o">}</span>
+
+<span class="o">}</span>  
+</code></pre></div></div>
+
+<h2 id="studyjava">Study.java</h2>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">reflection</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Study</span> <span class="o">{</span>
+	<span class="kt">void</span> <span class="nf">study</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="childjava">Child.java</h2>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">package</span> <span class="n">reflection</span><span class="o">;</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Child</span> <span class="kd">extends</span> <span class="nc">Parent</span> <span class="kd">implements</span> <span class="nc">Study</span><span class="o">{</span>
+	
+	<span class="kd">private</span> <span class="nc">String</span> <span class="n">mWork</span><span class="o">;</span>
+	<span class="kd">private</span> <span class="nc">String</span> <span class="n">mCompany</span><span class="o">;</span>
+	
+	<span class="kd">public</span> <span class="kt">int</span> <span class="n">age</span><span class="o">;</span>
+
+	<span class="kd">public</span> <span class="nf">Child</span><span class="o">(</span><span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+		<span class="kd">super</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+	<span class="o">}</span>
+	
+	<span class="kd">public</span> <span class="nf">Child</span><span class="o">(</span><span class="nc">String</span> <span class="n">sex</span><span class="o">,</span><span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+		<span class="kd">super</span><span class="o">(</span><span class="n">sex</span><span class="o">,</span><span class="n">name</span><span class="o">);</span>
+	<span class="o">}</span>
+	
+	<span class="kd">public</span> <span class="nf">Child</span><span class="o">(</span><span class="nc">String</span> <span class="n">sex</span><span class="o">,</span><span class="nc">String</span> <span class="n">name</span><span class="o">,</span><span class="nc">String</span> <span class="n">work</span><span class="o">,</span><span class="nc">String</span> <span class="n">company</span><span class="o">)</span> <span class="o">{</span>
+		<span class="kd">super</span><span class="o">(</span><span class="n">sex</span><span class="o">,</span><span class="n">name</span><span class="o">);</span>
+		<span class="n">mWork</span> <span class="o">=</span> <span class="n">work</span><span class="o">;</span>
+		<span class="n">mCompany</span>  <span class="o">=</span> <span class="n">company</span><span class="o">;</span>
+	<span class="o">}</span>
+
+	<span class="kd">private</span> <span class="kt">void</span> <span class="nf">setWorkAndCompany</span><span class="o">(</span><span class="nc">String</span> <span class="n">work</span><span class="o">,</span><span class="nc">String</span> <span class="n">company</span><span class="o">)</span> <span class="o">{</span>
+		<span class="n">mWork</span> <span class="o">=</span> <span class="n">work</span><span class="o">;</span>
+		<span class="n">mCompany</span> <span class="o">=</span> <span class="n">company</span><span class="o">;</span>
+	<span class="o">}</span>
+	
+	<span class="kd">public</span> <span class="nc">String</span> <span class="nf">toString</span><span class="o">()</span> <span class="o">{</span>
+		<span class="k">return</span> <span class="s">"My name is "</span> <span class="o">+</span> <span class="n">mName</span> <span class="o">+</span> <span class="s">" and my work is "</span> <span class="o">+</span> <span class="n">mWork</span> <span class="o">+</span> <span class="s">" and I am working at "</span> <span class="o">+</span> <span class="n">mCompany</span><span class="o">;</span>
+	<span class="o">}</span>
+	
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">study</span><span class="o">()</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"I am studying English."</span><span class="o">);</span>
+	<span class="o">}</span>
+
+	<span class="kt">void</span> <span class="nf">greet</span><span class="o">()</span> <span class="o">{</span>
+		<span class="c1">// TODO Auto-generated method stub</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Hello, nice to meet you!"</span><span class="o">);</span>
+	<span class="o">}</span>
+
+	<span class="kt">void</span> <span class="nf">introduce</span><span class="o">()</span> <span class="o">{</span>
+		<span class="c1">// TODO Auto-generated method stub</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"My name is "</span> <span class="o">+</span> <span class="n">mName</span><span class="o">);</span>
+	<span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="获取class对象">获取Class对象</h2>
+<hr />
+<p>若想检查一个类的信息，必修先获取这个类的Class对象。如果已经知道该类的类名，则可以通过<code class="highlighter-rouge">类名.class</code>方式获取；如果在编译期不知道目标类型，但是知道该类的完整路径，则可以通过<code class="highlighter-rouge">Class.forName("完整的类路径")</code>来获得；如果已经有了该类的一个实例<strong>instance</strong>，则可以用<code class="highlighter-rouge">instance.getClass()</code>方式获得该类的Class对象，具体如下所示：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+	 * 获取class对象
+	 */</span>
+	<span class="kd">public</span> <span class="nc">Class</span> <span class="nf">getClassObject</span><span class="o">()</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"\n==============getClassObject start=============="</span> <span class="o">);</span>
+		<span class="c1">//方法一：</span>
+		<span class="nc">Class</span><span class="o">&lt;?&gt;</span>  <span class="n">childClass</span> <span class="o">=</span> <span class="nc">Child</span><span class="o">.</span><span class="na">class</span><span class="o">;</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"get class object by class name : "</span> <span class="o">+</span> <span class="n">childClass</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+		<span class="c1">//方法二：</span>
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="n">childClass</span> <span class="o">=</span> <span class="nc">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="s">"reflection.Child"</span><span class="o">);</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"get class object by the whole path : "</span> <span class="o">+</span> <span class="n">childClass</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">ClassNotFoundException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+		<span class="o">}</span>
+		<span class="c1">//方法三：</span>
+		<span class="nc">Child</span> <span class="n">child</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Child</span><span class="o">(</span><span class="s">"rth"</span><span class="o">);</span>
+		<span class="n">childClass</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">();</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"get class object by the known object : "</span> <span class="o">+</span> <span class="n">childClass</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"==============getClassObject end==============\n"</span> <span class="o">);</span>
+		<span class="k">return</span> <span class="n">childClass</span><span class="o">;</span>
+	<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="通过class对象获取一个该类的实例">通过Class对象获取一个该类的实例</h2>
+<hr />
+<p>要想获取该类的属性或者调用该类的方法，必须要有该类的一个实例（对象）。此过程要通过先前获得的Class对象得到该类的构造器对象，然后通过构造器对象来实例化一个该类的实例：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+	 * 通过class对象构造目标类型的对象
+	 * @param mClass
+	 * @return
+	 */</span>
+	<span class="kd">public</span> <span class="nc">Object</span> <span class="nf">getClassInstance</span><span class="o">(</span><span class="nc">Class</span><span class="o">&lt;?&gt;</span> <span class="n">mClass</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"\n==============getClassInstance start=============="</span> <span class="o">);</span>
+		<span class="nc">Object</span> <span class="n">ob</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="c1">//通过class 对象获取构造器对象</span>
+			<span class="nc">Constructor</span><span class="o">&lt;?&gt;</span> <span class="n">constructor</span> <span class="o">=</span>  <span class="n">mClass</span><span class="o">.</span><span class="na">getConstructor</span><span class="o">(</span><span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+			<span class="c1">//设置constructor的Accessible</span>
+			<span class="n">constructor</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+			<span class="c1">//通过constructor对象创建Child对象</span>
+			<span class="n">ob</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="s">"男"</span><span class="o">,</span><span class="s">"rth"</span><span class="o">,</span><span class="s">"coder"</span><span class="o">,</span><span class="s">"Google"</span><span class="o">);</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+		<span class="o">}</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"==============getClassInstance end==============\n"</span> <span class="o">);</span>
+		<span class="k">return</span> <span class="n">ob</span><span class="o">;</span>
+	<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="获取当前类中定义的方法">获取当前类中定义的方法</h2>
+<hr />
+<p>Class对象的getDeclaredMethods()函数能获取当前类中所有的方法，与方法的可见性无关。而getDeclaredMethods(String name,Class&lt;?&gt;… parameterTypes)方法用来获取当前类中指定的方法，也与可见性无关。示例如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+	 * 通过反射获取指定对象中的方法
+	 * @param child
+	 */</span>
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">getDeclaredMethods</span><span class="o">(</span><span class="nc">Child</span> <span class="n">child</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"\n==============getDeclaredMethods start=============="</span> <span class="o">);</span>
+		<span class="c1">//获取该类中所有的方法(public,private,protected,default)，但不包括从父类继承的方法</span>
+		<span class="nc">Method</span><span class="o">[]</span> <span class="n">methods</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getDeclaredMethods</span><span class="o">();</span>
+		<span class="k">for</span><span class="o">(</span><span class="nc">Method</span> <span class="n">method</span> <span class="o">:</span> <span class="n">methods</span><span class="o">)</span> <span class="o">{</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"declared method name : "</span> <span class="o">+</span> <span class="n">method</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+		<span class="o">}</span>
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="c1">//获取该类中特定的方法，与方法的可见性无关</span>
+			<span class="nc">Method</span> <span class="n">setWorkAndCompanyMethod</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getDeclaredMethod</span><span class="o">(</span><span class="s">"setWorkAndCompany"</span>
+					<span class="o">,</span> <span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="nc">String</span><span class="o">.</span><span class="na">class</span> <span class="o">);</span>
+			<span class="c1">//判断该方法是不是私有的</span>
+			<span class="k">if</span><span class="o">(</span><span class="nc">Modifier</span><span class="o">.</span><span class="na">isPrivate</span><span class="o">(</span><span class="n">setWorkAndCompanyMethod</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="o">{</span>
+				<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">setWorkAndCompanyMethod</span><span class="o">.</span><span class="na">getName</span><span class="o">()</span> <span class="o">+</span> <span class="s">" is private"</span><span class="o">);</span>
+			<span class="o">}</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+			<span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+		<span class="o">}</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"==============getDeclaredMethods end==============\n"</span> <span class="o">);</span>
+	<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="获取当前类以及父类中的所有public方法">获取当前类以及父类中的所有public方法</h2>
+<hr />
+<p>对应于getDeclaredMethods方法，还有一个类似的getMethods()方法，不同之处在于后者获取的是public型方法，而且包括父类中的方法。同样的，getDeclaredMethod(String name,Class&lt;?&gt;… parameterTypes)方法获取当前类或者父类中指定的方法。示例如下：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+	 * 获取当前类以及父类中的所有public方法
+	 * @param child
+	 */</span>
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">getMethods</span><span class="o">(</span><span class="nc">Child</span> <span class="n">child</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"\n==============getMethods start=============="</span> <span class="o">);</span>
+		<span class="c1">//获取所有public方法</span>
+		<span class="nc">Method</span><span class="o">[]</span> <span class="n">methods</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getMethods</span><span class="o">();</span>
+		<span class="k">for</span><span class="o">(</span><span class="nc">Method</span> <span class="n">method</span> <span class="o">:</span> <span class="n">methods</span><span class="o">)</span> <span class="o">{</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"method name : "</span> <span class="o">+</span> <span class="n">method</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+		<span class="o">}</span>
+		<span class="c1">//获取制定的方法</span>
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="c1">//只能获取共有方法，私有方法会抛出异常</span>
+			<span class="nc">Method</span> <span class="n">studyMethod</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getMethod</span><span class="o">(</span><span class="s">"study"</span><span class="o">);</span>
+			<span class="c1">//调用该public方法</span>
+			<span class="n">studyMethod</span><span class="o">.</span><span class="na">invoke</span><span class="o">(</span><span class="n">child</span><span class="o">);</span>
+			<span class="c1">//尝试获取一个私有方法，将会抛出NoSuchMethodException错误</span>
+			<span class="nc">Method</span> <span class="n">setWorkAndCompanyMethod</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getMethod</span><span class="o">(</span><span class="s">"setWorkAndCompany"</span>
+					<span class="o">,</span> <span class="nc">String</span><span class="o">.</span><span class="na">class</span><span class="o">,</span><span class="nc">String</span><span class="o">.</span><span class="na">class</span> <span class="o">);</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">Exception</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"getMethods出错："</span><span class="o">+</span><span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">());</span>
+		<span class="o">}</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"==============getMethods end==============\n"</span> <span class="o">);</span>
+	<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="获取当前类中定义的属性">获取当前类中定义的属性</h2>
+<hr />
+<p>当前类中的属性可以通过getDeclaredFields()方法获取，若要获取当前类中指定的属性，通过getDeclaredField(String name)方法。这两种方法获取的属性都是与可见性无关的。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+	 * 获取当前类中定义的属性
+	 * @param child
+	 */</span>
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">getCurrentClassFields</span><span class="o">(</span><span class="nc">Child</span> <span class="n">child</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"\n==============getCurrentClassFields start=============="</span> <span class="o">);</span>
+		<span class="c1">//获取当前类中所有属性，（public、private、protected）</span>
+		<span class="nc">Field</span><span class="o">[]</span> <span class="n">fields</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getDeclaredFields</span><span class="o">();</span>
+		<span class="k">for</span><span class="o">(</span><span class="nc">Field</span> <span class="n">field</span> <span class="o">:</span> <span class="n">fields</span><span class="o">)</span> <span class="o">{</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"filed's name is : "</span> <span class="o">+</span> <span class="n">field</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+		<span class="o">}</span>
+		<span class="c1">//获取指定的属性，与可见性无关</span>
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="nc">Field</span> <span class="n">mWork</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getDeclaredField</span><span class="o">(</span><span class="s">"mWork"</span><span class="o">);</span>
+			<span class="c1">//判断属性的可见性</span>
+			<span class="k">if</span><span class="o">(</span><span class="nc">Modifier</span><span class="o">.</span><span class="na">isPrivate</span><span class="o">(</span><span class="n">mWork</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()))</span> <span class="o">{</span>
+				<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">mWork</span><span class="o">.</span><span class="na">getName</span><span class="o">()</span> <span class="o">+</span> <span class="s">" is private"</span><span class="o">);</span>
+			<span class="o">}</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">NoSuchFieldException</span> <span class="o">|</span> <span class="nc">SecurityException</span><span class="o">|</span><span class="nc">IllegalArgumentException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+			<span class="c1">// TODO Auto-generated catch block</span>
+			<span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+		<span class="o">}</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"==============getCurrentClassFields end==============\n"</span> <span class="o">);</span>
+	<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="获取当前类和父类中的公共属性">获取当前类和父类中的公共属性</h2>
+<hr />
+<p>getFields()方法获取的是当前类以及父类中的所有公共属性。getField(String name)方法的意义同上，不再赘述。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+	 * 获取当前类和父类中所有的公有属性
+	 * @param child
+	 */</span>
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">getAllClassFields</span><span class="o">(</span><span class="nc">Child</span> <span class="n">child</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"\n==============getAllClassFields start=============="</span> <span class="o">);</span>
+		<span class="c1">//获取当前类和父类所有的公共属性</span>
+		<span class="nc">Field</span><span class="o">[]</span> <span class="n">publicFields</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getFields</span><span class="o">();</span>
+		<span class="k">for</span><span class="o">(</span><span class="nc">Field</span> <span class="n">field</span> <span class="o">:</span> <span class="n">publicFields</span><span class="o">)</span> <span class="o">{</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"public field name : "</span> <span class="o">+</span> <span class="n">field</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+		<span class="o">}</span>
+		<span class="c1">//获取当前类和父类中指定的公共属性</span>
+		<span class="k">try</span> <span class="o">{</span>
+			<span class="nc">Field</span> <span class="n">ageField</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getField</span><span class="o">(</span><span class="s">"age"</span><span class="o">);</span>
+			<span class="c1">//设置年龄</span>
+			<span class="n">ageField</span><span class="o">.</span><span class="na">setInt</span><span class="o">(</span><span class="n">child</span><span class="o">,</span> <span class="mi">21</span><span class="o">);</span>
+			<span class="c1">//打印年龄</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"My age is "</span> <span class="o">+</span> <span class="n">ageField</span><span class="o">.</span><span class="na">getInt</span><span class="o">(</span><span class="n">child</span><span class="o">));</span>
+		<span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">NoSuchFieldException</span> <span class="o">|</span> <span class="nc">SecurityException</span><span class="o">|</span><span class="nc">IllegalArgumentException</span> <span class="o">|</span> <span class="nc">IllegalAccessException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+			<span class="c1">// TODO Auto-generated catch block</span>
+			<span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+		<span class="o">}</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"==============getAllClassFields end==============\n"</span> <span class="o">);</span>
+	<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="获取当前类的父类">获取当前类的父类</h2>
+<hr />
+<p>Class对象的getSuperClass()方法可以获得当前类的父类的Class对象：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+	 * 获取父类
+	 * @param child
+	 */</span>
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">getParentClass</span><span class="o">(</span><span class="nc">Child</span> <span class="n">child</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"\n==============getParentClass start=============="</span> <span class="o">);</span>
+		<span class="nc">Class</span><span class="o">&lt;?&gt;</span> <span class="n">parentClass</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getSuperclass</span><span class="o">();</span>
+		<span class="k">while</span><span class="o">(</span><span class="n">parentClass</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"Child has a  super class is : "</span> <span class="o">+</span> <span class="n">parentClass</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+			<span class="n">parentClass</span> <span class="o">=</span> <span class="n">parentClass</span><span class="o">.</span><span class="na">getSuperclass</span><span class="o">();</span>
+		<span class="o">}</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"==============getParentClass end==============\n"</span> <span class="o">);</span>
+	<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="获取当前类的接口">获取当前类的接口</h2>
+<hr />
+<p>类似与getSuperClass()方法，getInterfaces()方法可以获得当前类实现的接口对象的Class对象：</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+	 * 获取当前类的接口
+	 * @param child
+	 */</span>
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">getInterface</span><span class="o">(</span><span class="nc">Child</span> <span class="n">child</span><span class="o">)</span> <span class="o">{</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"\n==============getInterface start=============="</span> <span class="o">);</span>
+		<span class="nc">Class</span><span class="o">&lt;?&gt;[]</span> <span class="n">interfaces</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getInterfaces</span><span class="o">();</span>
+		<span class="k">for</span><span class="o">(</span><span class="nc">Class</span><span class="o">&lt;?&gt;</span> <span class="n">inf</span> <span class="o">:</span> <span class="n">interfaces</span><span class="o">)</span> <span class="o">{</span>
+			<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"child has implements a interface : "</span> <span class="o">+</span> <span class="n">inf</span><span class="o">.</span><span class="na">getName</span><span class="o">());</span>
+		<span class="o">}</span>
+		<span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"==============getInterface end==============\n"</span> <span class="o">);</span>
+	<span class="o">}</span>
+</code></pre></div></div>
+
+
+
+      <footer class="site-footer">
+  <div class="pagination">
+    
+      <span class="previous">上一页</span>
+    
+      <span class="page_number "> / </span>
+    
+      <span class="next">下一页</span>
+    
+  </div>
+</footer>
+
+    </section>
+
+  </body>
+</html>

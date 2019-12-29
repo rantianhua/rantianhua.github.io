@@ -5,8 +5,8 @@ title: {{ site.name }}
 
 <div id="home">
   <h1>文章列表</h1>
-  <ul class="posts">
-    {% for post in site.posts %}
+  <ul class="posts"></ul>
+    {% for post in paginator.posts %}
       <li><span>{{ post.date | date_to_string }}</span> &raquo; <a href="{{ site.baseurl }}{{ post.url }}">{{ post.title }}</a></li>
     {% endfor %}
   </ul>
