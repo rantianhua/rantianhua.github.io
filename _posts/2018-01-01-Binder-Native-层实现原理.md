@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Binder 实现原理"
+title:  "Binder Native 层实现原理"
 date:   2018-01-07 21:00:00
 categories: Android
 ---
